@@ -1,0 +1,122 @@
+
+# Import Libraries
+from sklearn import datasets
+import warnings
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+#ignore warnings
+warnings.filterwarnings('ignore')
+
+!pip install scikit-learn==1.1.3
+[ ]
+# read data from sklearn data set
+data=datasets.load_boston()
+df=pd.DataFrame(data.data,columns=data.feature_names)
+df['price']=data.target
+df
+
+
+df.info()
+
+df.isnull().sum()
+
+df.describe()
+
+df.shape
+
+#univariate EDA
+fig=plt.figure(figsize=(10,10))
+df.boxplot()
+
+
+sns.boxplot(df["RM"])
+
+
+plt.hist(df["RM"])
+
+
+df["RM"].value_counts()
+5.713    3
+6.167    3
+6.127    3
+6.229    3
+6.405    3
+        ..
+5.859    1
+6.416    1
+5.572    1
+5.880    1
+6.976    1
+Name: RM, Length: 446, dtype: int64
+
+#bivariate EDA
+sns.scatterplot(df["LSTAT"],df["price"])
+
+
+sns.scatterplot(df["RM"],df["price"])
+
+#Multivariate EDA
+fig= plt.subplots(figsize=(10,10)) 
+sns.heatmap(df.corr(),annot=True,cmap="Blues")
+
+pip install keras_tuner
+
+import tensorflow.keras as tk
+
+model=tk.Sequential()
+
+#adding input layer
+
+model.add(tk.layers.Input(shape=(13,)))
+
+#adding first hidden layer
+model.add(tk.layers.Dense(units=6,activation="relu",kernel_initializer="he_uniform"))
+
+
+#adding second hidden layer
+model.add(tk.layers.Dense(units=6,activation="relu",kernel_initializer="he_uniform"))
+
+#adding output layer
+model.add(tk.layers.Dense(units=1,activation="relu",kernel_initializer="he_uniform"))
+
+#compiling the model
+#model.compile(optimizer="adam",loss="mean_squared_error")
+
+#compiling the model
+model.compile(optimizer="adam",loss="mean_absolute_error")
+
+model.summary()
+
+df.head()
+x=df.iloc[:,:-1]  #independent
+display(x)
+y=df['price'] #dependent
+display(y)
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(x,y,test_size=0.2,random_state=10)
+
+#training the model
+import time
+start=time.time()
+obj1=model.fit(x=xtrain,y=ytrain,epochs=50,batch_size=64,validation_data=(xtest,ytest))
+
+ypred=model.predict([[0.00632,18.0,2.31,0.0,0.538,6.575,65.2,4.0900,1.0,296.0,15.3,396.90,4.98]])
+ypred
+
+ypred1=model.predict(xtest)
+display(ypred1,ytest)
+ypred1.shape,ytest.shape
+
+from sklearn.metrics import mean_absolute_error
+error=mean_absolute_error(ytest,ypred1)
+error
+
+plt.figure(figsize=(10,10))
+ax1 = sns.distplot(ytest, hist=False, color="r", label="Actual Value")
+sns.distplot(ypred1, hist=False, color="b", label="Predicted Values" , ax=ax1)
+
+

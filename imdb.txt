@@ -1,0 +1,112 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings("ignore")
+
+df=pd.read_csv("IMDB Dataset.csv")
+
+df1=df.head(10)
+
+df1
+
+df.info()
+
+df.isnull().sum()
+
+df.sentiment.value_counts()
+
+df.review.value_counts().head(2)
+
+# checking how many duplicate valu there are?
+df.duplicated().value_counts()
+
+data=df.sample(10000)
+
+data
+
+data.drop_duplicates(inplace=True)
+
+data.duplicated().value_counts()
+
+pip install nltk
+
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from bs4 import BeautifulSoup
+nltk.download('stopwords')
+# function to clean whole text
+
+def clean_review(review, stemmer = PorterStemmer(), stop_words = set(stopwords.words("english"))):
+    #removing html tags from reviews
+    soup = BeautifulSoup(review, "html.parser")
+    no_html_review = soup.get_text().lower()
+
+    # empty list for adding clean words
+    clean_text = []
+    # cleaning stopwords and not alpha characters
+    for word in review.split():
+        if word not in stop_words and word.isalpha():
+            clean_text.append(stemmer.stem(word))
+
+    return " ".join(clean_text)
+data.review = data.review.apply(clean_review)
+#checking the clean review in specific locaion
+data.review.iloc[3537]
+
+#how the data looks like now
+data
+
+# verctorizing reviews
+#import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# setting max_features to 5000 to get most repeated 5000 words in reviews
+cv = CountVectorizer(max_features=300,ngram_range=(1,4))
+
+# Fitting countvectorizer in data.review and getting X for ML
+X = cv.fit_transform(data.review).toarray()
+x1=pd.DataFrame(X,columns=cv.get_feature_names())
+x1
+
+x1.shape
+
+#Importing label encoder
+from sklearn.preprocessing import LabelEncoder
+lb = LabelEncoder()
+
+# positive = 1, negative = 0
+data.sentiment = lb.fit_transform(data.sentiment)
+data.sentiment
+
+y=data.sentiment
+y.shape
+
+from sklearn.model_selection import train_test_split
+
+# converting X, y into train test split
+xtrain, xtest, ytrain, ytest = train_test_split(x1, y, test_size=0.2, random_state=42)
+ytrain.shape
+
+pip install tensorflow
+
+import tensorflow.keras as tk
+model = tk.Sequential()
+model.add(tk.layers.Input(shape=(300,)))
+model.add(tk.layers.Dense(50, activation='relu',kernel_initializer="he_uniform"))
+model.add(tk.layers.Dense(1, activation='sigmoid',kernel_initializer="he_uniform"))
+model.summary()
+
+
+model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+obj1=model.fit(x=xtrain,y=ytrain,epochs=80,batch_size=64,validation_data=(xtest,ytest))
+y_pred=model.predict(xtest)
+y_pred
+
+from sklearn.metrics import accuracy_score
+accuracy=accuracy_score(ytest,y_pred.round())
+accuracy
+

@@ -1,0 +1,58 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from keras.datasets import fashion_mnist
+import tensorflow.keras as tk
+
+%matplotlib inline
+
+(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
+
+display(x_train.shape,x_test.shape)
+
+figure=plt.figure(figsize=(20,20))
+for i in range(1,200):
+  plt.subplot(20,10,i)
+  plt.imshow(x_train[i],cmap=plt.get_cmap('BrBG_r'))
+plt.show()
+
+
+cnn_model = tk.Sequential()
+
+cnn_model.add(tk.layers.Conv2D(32,3,3,input_shape = (28,28,1),activation = 'relu'))
+
+    # Max pooling will reduce the
+    # size with a kernal size of 2x2
+cnn_model.add(tk.layers.MaxPooling2D(pool_size= (2,2)))
+
+    # Once the convolutional and pooling
+    # operations are done the layer
+    # is flattened and fully connected layers
+    # are added
+cnn_model.add(tk.layers.Flatten())
+
+cnn_model.add(tk.layers.Dense(32,activation = 'relu'))
+cnn_model.add(tk.layers.Dense(10,activation = 'softmax'))
+
+cnn_model.compile(optimizer='Adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+
+cnn_model.fit(x=x_train,y=y_train,batch_size =512,epochs = 50,verbose = 1,validation_data = (x_test,y_test))
+
+evaluation = cnn_model.evaluate(x_test,y_test)
+print('Test Accuracy : {:.3f}'.format(evaluation[1]))
+
+predicted_classes = np.argmax(cnn_model.predict(x_test),axis=-1)
+
+predicted_classes
+
+L = 10
+W = 10
+fig,axes = plt.subplots(L,W,figsize = (20,20))
+axes = axes.ravel()
+for i in np.arange(0,L*W):
+    axes[i].imshow(x_test[i].reshape(28,28))
+    axes[i].set_title('Prediction Class:{1} \n true class: {1}'.format(predicted_classes[i], y_test[i]))
+    axes[i].axis('off')
+plt.subplots_adjust(wspace = 0.75)
+
